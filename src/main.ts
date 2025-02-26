@@ -1,8 +1,9 @@
-import 'reflect-metadata';
-import express from 'express';
-import 'dotenv/config';
+import "reflect-metadata";
+import express from "express";
+import "dotenv/config";
 // import AppDataSource from './config/db';
-import cors from 'cors';
+import cors from "cors";
+import db from "./models";
 // import router from './routes/index';
 // import errorHandler from './middleware/ErrorHandlingMiddleware';
 // import swaggerDocs from './config/swagger';
@@ -19,10 +20,11 @@ app.use(express.json());
 
 // app.use(errorHandler);
 
-// AppDataSource.initialize().then(async () => {
-app.listen(HTTP_PORT, () => {
-  console.log(HTTP_PORT);
+// Запуск сервера
+db.sequelize.sync().then(() => {
+  app.listen(HTTP_PORT, () => {
+    console.log(`🚀 Server is running on port ${HTTP_PORT}`);
+  });
 });
-// });
 
-export default app;
+// export default app;
