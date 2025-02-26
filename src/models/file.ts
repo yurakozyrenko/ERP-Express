@@ -1,32 +1,47 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/db";
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../config/db';
 
-const File = sequelize.define("File", {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  extension: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  mimeType: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  size: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  uploadDate: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-});
+class File extends Model {
+  declare id: number;
+  declare name: string;
+  declare extension: string;
+  declare mimeType: string;
+  declare size: number;
+  declare uploadDate: Date;
+}
 
-export default File
+File.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    extension: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    mimeType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    size: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    uploadDate: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    sequelize,
+    tableName: 'files',
+  },
+);
+
+export default File;

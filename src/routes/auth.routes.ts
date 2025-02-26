@@ -1,5 +1,5 @@
 import { Router } from "express";
-import authController from "../controllers/authController";
+import AuthController from "../controllers/auth.controller";
 import { body } from "express-validator"; // Для валидации входных данных
 
 const router = Router();
@@ -44,7 +44,7 @@ router.post(
   "/signup",
   body("email").isEmail(),
   body("password").isLength({ min: 6 }),
-  authController.signup
+  AuthController.signup
 );
 
 /**
@@ -76,7 +76,7 @@ router.post(
  *       401:
  *         description: Неверные учетные данные
  */
-router.post("/signin", authController.signin);
+router.post("/signin", AuthController.signin);
 
 /**
  * @swagger
@@ -102,7 +102,7 @@ router.post("/signin", authController.signin);
  *       403:
  *         description: Refresh-токен недействителен
  */
-router.post("/signin/new_token", authController.refreshToken);
+router.post("/signin/new_token", AuthController.refreshToken);
 
 /**
  * @swagger
@@ -116,6 +116,6 @@ router.post("/signin/new_token", authController.refreshToken);
  *       401:
  *         description: Пользователь не авторизован
  */
-router.post("/logout", authController.logout);
+router.post("/logout", AuthController.logout);
 
 export default router;
