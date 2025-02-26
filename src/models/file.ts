@@ -8,6 +8,7 @@ class File extends Model {
   declare mimeType: string;
   declare size: number;
   declare uploadDate: Date;
+  declare userId: string;
 }
 
 File.init(
@@ -36,6 +37,14 @@ File.init(
     uploadDate: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+    },
+    userId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
   },
   {

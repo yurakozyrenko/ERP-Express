@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import upload from '../middleware/upload';
 import FilesController from '../controllers/files.controller';
+import authMiddleware from '../middleware/auth';
 
 const router = Router();
 
@@ -16,8 +17,9 @@ const router = Router();
  * /api/file/upload:
  *   post:
  *     summary: Загрузка файла
- *     tags:
- *       - Files
+ *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -34,7 +36,7 @@ const router = Router();
  *       400:
  *         description: Ошибка загрузки файла
  */
-router.post('/upload', upload.single('file'), FilesController.uploadFile);
+router.post('/upload', authMiddleware, upload.single('file'), FilesController.uploadFile);
 
 /**
  * @swagger
@@ -42,6 +44,8 @@ router.post('/upload', upload.single('file'), FilesController.uploadFile);
  *   get:
  *     summary: Получение списка файлов с пагинацией
  *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -57,7 +61,7 @@ router.post('/upload', upload.single('file'), FilesController.uploadFile);
  *       200:
  *         description: Успешный ответ с массивом файлов
  */
-router.get('/list', FilesController.listFiles);
+router.get('/list', authMiddleware, FilesController.listFiles);
 
 /**
  * @swagger
@@ -65,6 +69,8 @@ router.get('/list', FilesController.listFiles);
  *   get:
  *     summary: Получение информации о файле
  *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -78,7 +84,7 @@ router.get('/list', FilesController.listFiles);
  *       404:
  *         description: Файл не найден
  */
-router.get('/:id', FilesController.viewFile);
+router.get('/:id', authMiddleware, FilesController.viewFile);
 
 /**
  * @swagger
@@ -86,6 +92,8 @@ router.get('/:id', FilesController.viewFile);
  *   delete:
  *     summary: Удаление файла
  *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -99,7 +107,7 @@ router.get('/:id', FilesController.viewFile);
  *       404:
  *         description: Файл не найден
  */
-router.delete('/delete/:id', FilesController.deleteFile);
+router.delete('/delete/:id', authMiddleware, FilesController.deleteFile);
 
 /**
  * @swagger
@@ -107,6 +115,8 @@ router.delete('/delete/:id', FilesController.deleteFile);
  *   put:
  *     summary: Обновление файла
  *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     consumes:
  *       - multipart/form-data
  *     parameters:
@@ -134,8 +144,7 @@ router.delete('/delete/:id', FilesController.deleteFile);
  *       404:
  *         description: Файл не найден
  */
-router.put('/update/:id', upload.single('file'), FilesController.updateFile);
-
+router.put('/update/:id', authMiddleware, upload.single('file'), FilesController.updateFile);
 
 /**
  * @swagger
@@ -143,6 +152,8 @@ router.put('/update/:id', upload.single('file'), FilesController.updateFile);
  *   get:
  *     summary: Скачивание файла
  *     tags: [Files]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -156,6 +167,6 @@ router.put('/update/:id', upload.single('file'), FilesController.updateFile);
  *       404:
  *         description: Файл не найден
  */
-router.get('/download/:id', FilesController.downloadFile);
+router.get('/download/:id', authMiddleware, FilesController.downloadFile);
 
 export default router;

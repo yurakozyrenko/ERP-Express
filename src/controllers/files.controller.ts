@@ -1,23 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import filesService from '../services/files.service';
-// import File from '../models/File';
-// import fs from 'fs';
-// import path from 'path';
 
 class FilesController {
-  // // Загрузка файла
+  private getUserId(req: Request, res: Response): string | null {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return null;
+    }
+    return req.user.id;
+  }
+
   async uploadFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
+
       if (!req.file) {
         res.status(400).json({ message: 'No file uploaded' });
         return;
       }
 
-      const { originalname, filename, mimetype, size } = req.file;
-
-      console.log(originalname, filename, mimetype, size);
-
-      const fileRecord = await filesService.uploadFile({ originalname, filename, mimetype, size });
+      const fileRecord = await filesService.uploadFile({ ...req.file, userId });
 
       res.status(201).json({ message: 'File uploaded', file: fileRecord });
     } catch (error) {
@@ -25,13 +28,15 @@ class FilesController {
     }
   }
 
-  // // Получение списка файлов с пагинацией
   async listFiles(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
+
       const listSize = parseInt(req.query.list_size as string) || 10;
       const page = parseInt(req.query.page as string) || 1;
 
-      const result = await filesService.listFiles({ listSize, page });
+      const result = await filesService.listFiles({ listSize, page, userId });
 
       res.status(200).json(result);
     } catch (error) {
@@ -39,12 +44,13 @@ class FilesController {
     }
   }
 
-  // // Просмотр файла (детали)
   async viewFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
 
-      const file = await filesService.viewFile(+id);
+      const { id } = req.params;
+      const file = await filesService.viewFile(+id, userId);
 
       res.status(200).json(file);
     } catch (error) {
@@ -52,12 +58,14 @@ class FilesController {
     }
   }
 
-  // // Удаление файла
   async deleteFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
+
       const { id } = req.params;
 
-      await filesService.deleteFile(+id);
+      await filesService.deleteFile(+id, userId);
 
       res.status(200).json({ message: 'File deleted' });
     } catch (error) {
@@ -65,9 +73,11 @@ class FilesController {
     }
   }
 
-  // // Обновление файла
   async updateFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
+
       const { id } = req.params;
 
       if (!req.file) {
@@ -75,7 +85,7 @@ class FilesController {
         return;
       }
 
-      const updatedFile = await filesService.updateFile(+id, req.file);
+      const updatedFile = await filesService.updateFile(+id, userId, req.file);
 
       res.status(200).json({ message: 'File updated', file: updatedFile });
     } catch (error) {
@@ -85,8 +95,11 @@ class FilesController {
 
   async downloadFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = this.getUserId(req, res);
+      if (!userId) return;
+
       const { id } = req.params;
-      await filesService.downloadFile(+id, res);
+      await filesService.downloadFile(+id, userId, res);
     } catch (error) {
       next(error);
     }

@@ -8,21 +8,23 @@ import path from 'path';
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 
 class FilesService {
-  async uploadFile({ originalname, filename, mimetype, size }: IFile) {
+  async uploadFile({ originalname, filename, mimetype, size, userId }: IFile) {
     return await File.create({
       name: filename,
       extension: path.extname(originalname),
       mimeType: mimetype,
       size,
+      userId,
     });
   }
 
-  async listFiles({ listSize, page }: IParams) {
+  async listFiles({ listSize, page, userId }: IParams) {
     const offset = (page - 1) * listSize;
 
     const { rows: files, count } = await File.findAndCountAll({
       limit: listSize,
       offset,
+      where: { userId },
       order: [['uploadDate', 'DESC']],
     });
 
@@ -33,14 +35,17 @@ class FilesService {
       files,
     };
   }
-  async viewFile(id: number) {
-    const file = await File.findByPk(id);
+
+  async viewFile(id: number, userId: string) {
+    const file = await File.findOne({
+      where: { id, userId },
+    });
     if (!file) throw ApiError.notFound('File not found');
     return file;
   }
 
-  async deleteFile(id: number) {
-    const file = await this.viewFile(id);
+  async deleteFile(id: number, userId: string) {
+    const file = await this.viewFile(id, userId);
     const filePath = path.join(UPLOAD_DIR, file.name);
 
     try {
@@ -52,8 +57,8 @@ class FilesService {
     await file.destroy();
   }
 
-  async updateFile(id: number, newFile: Express.Multer.File) {
-    const file = await this.viewFile(id);
+  async updateFile(id: number, userId: string, newFile: Express.Multer.File) {
+    const file = await this.viewFile(id, userId);
     const { name } = file;
 
     const oldFilePath = path.join(UPLOAD_DIR, name);
@@ -76,8 +81,8 @@ class FilesService {
     return file;
   }
 
-  async downloadFile(id: number, res: Response) {
-    const file = await this.viewFile(id);
+  async downloadFile(id: number, userId: string, res: Response) {
+    const file = await this.viewFile(id, userId);
     const { name } = file;
 
     const filePath = path.join(UPLOAD_DIR, name);

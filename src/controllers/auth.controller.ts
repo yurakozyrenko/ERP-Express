@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import authServices from '../services/auth.service';
+import ApiError from '../error/ApiError';
+import TokenBlacklist from '../models/tokenBlacklist';
+
 
 dotenv.config();
 
@@ -14,11 +17,15 @@ class AuthController {
   // Регистрация пользователя
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { id, password } = req.body;
+
+      if (!id) {
+        return next(ApiError.badRequest('Phone or Email is required'));
+      }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      await authServices.signup({ email, password: hashedPassword });
+      await authServices.signup({ id, password: hashedPassword });
 
       res.status(201).json({ message: 'User registered' });
     } catch (error) {
@@ -29,9 +36,9 @@ class AuthController {
   // Вход пользователя
   async signin(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { id, password } = req.body;
 
-      const result = await authServices.signin({ email, password });
+      const result = await authServices.signin({ id, password });
 
       res.status(200).json(result);
     } catch (error) {
@@ -56,20 +63,42 @@ class AuthController {
         res.json({ accessToken });
       });
     } catch (error) {
-      //   return res.status(500).json({ error: "Token refresh failed" });
-      next(error); // Передача ошибки в обработчик ошибок Express
+      next(error);
     }
   }
 
   // Логаут пользователя
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return next(ApiError.unauthorized('Token required'));
+      }
+
+      const token = authHeader.split(' ')[1];
+
+      // Добавляем токен в чёрный список
+      // await TokenBlacklist.create({ token });
+
       const { userId } = req.body;
+
       tokenStorage.delete(userId); // Удаляем refresh-токен
-      res.status(200).json({ message: 'Logged out' });
+      res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
-      //   return res.status(500).json({ error: "Logout failed" });
-      next(error); // Передача ошибки в обработчик ошибок Express
+      next(error);
+    }
+  }
+
+  async getUserInfo(req: Request, res: Response, next: NextFunction) {
+    
+    try {
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
+
+      res.json({ id: req.user.id });
+    } catch (err) {
+      next(err);
     }
   }
 }
