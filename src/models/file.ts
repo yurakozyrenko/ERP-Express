@@ -41,6 +41,7 @@ File.init(
   {
     sequelize,
     tableName: 'files',
+    timestamps: false,
   },
 );
 

@@ -15,6 +15,8 @@ class FilesController {
 
       const { originalname, filename, mimetype, size } = req.file;
 
+      console.log(originalname, filename, mimetype, size);
+
       const fileRecord = await filesService.uploadFile({ originalname, filename, mimetype, size });
 
       res.status(201).json({ message: 'File uploaded', file: fileRecord });

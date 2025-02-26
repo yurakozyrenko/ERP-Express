@@ -2,21 +2,19 @@ import { Response } from 'express';
 import ApiError from '../error/ApiError';
 import File from '../models/file';
 import { IFile, IParams } from '../utils/interfaces';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
+
+const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 
 class FilesService {
   async uploadFile({ originalname, filename, mimetype, size }: IFile) {
-    const extension = path.extname(originalname);
-
-    const fileRecord = await File.create({
+    return await File.create({
       name: filename,
+      extension: path.extname(originalname),
       mimeType: mimetype,
       size,
-      extension,
     });
-
-    return fileRecord;
   }
 
   async listFiles({ listSize, page }: IParams) {
@@ -37,66 +35,56 @@ class FilesService {
   }
   async viewFile(id: number) {
     const file = await File.findByPk(id);
-    if (!file) {
-      throw ApiError.notFound('File not found');
-    }
+    if (!file) throw ApiError.notFound('File not found');
     return file;
   }
 
   async deleteFile(id: number) {
     const file = await this.viewFile(id);
+    const filePath = path.join(UPLOAD_DIR, file.name);
 
-    const { name } = file;
-    const uploadDir = path.join(__dirname, '../../uploads');
-    const filePath = path.join(uploadDir, name);
-
-    if (!fs.existsSync(filePath)) {
+    try {
+      await fs.unlink(filePath);
+    } catch (err) {
       throw ApiError.notFound('File not found on server');
     }
 
-    fs.unlink(filePath, (err) => {
-      if (err) console.error('Ошибка удаления файла:', err);
-    });
     await file.destroy();
   }
 
   async updateFile(id: number, newFile: Express.Multer.File) {
     const file = await this.viewFile(id);
-
     const { name } = file;
 
-    const uploadDir = path.join(__dirname, '../../uploads');
-    const oldFilePath = path.join(uploadDir, name);
+    const oldFilePath = path.join(UPLOAD_DIR, name);
 
-    if (fs.existsSync(oldFilePath)) {
-      fs.unlinkSync(oldFilePath);
+    try {
+      await fs.unlink(oldFilePath);
+    } catch (err) {
+      throw ApiError.notFound('File not found on server');
     }
-
-    const fileExtension = path.extname(newFile.originalname);
 
     Object.assign(file, {
       name: newFile.filename,
-      extension: fileExtension,
+      extension: path.extname(newFile.originalname),
       mimeType: newFile.mimetype,
       size: newFile.size,
       uploadDate: new Date(),
     });
 
     await file.save();
-
     return file;
   }
 
   async downloadFile(id: number, res: Response) {
     const file = await this.viewFile(id);
-
     const { name } = file;
 
-    const uploadDir = path.join(__dirname, '../../uploads');
+    const filePath = path.join(UPLOAD_DIR, name);
 
-    const filePath = path.join(uploadDir, name);
-
-    if (!fs.existsSync(filePath)) {
+    try {
+      await fs.access(filePath);
+    } catch (err) {
       throw ApiError.notFound('File not found on server');
     }
 
