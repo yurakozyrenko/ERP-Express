@@ -2,6 +2,8 @@ import { Router } from 'express';
 import upload from '../middleware/upload';
 import FilesController from '../controllers/files.controller';
 import authMiddleware from '../middleware/auth';
+import { validateRequest } from '../middleware/validateRequest';
+import { validateQueryId } from '../validations/param';
 
 const router = Router();
 
@@ -84,7 +86,7 @@ router.get('/list', authMiddleware, FilesController.listFiles);
  *       404:
  *         description: Файл не найден
  */
-router.get('/:id', authMiddleware, FilesController.viewFile);
+router.get('/:id', authMiddleware, validateQueryId, validateRequest, FilesController.viewFile);
 
 /**
  * @swagger
@@ -107,7 +109,7 @@ router.get('/:id', authMiddleware, FilesController.viewFile);
  *       404:
  *         description: Файл не найден
  */
-router.delete('/delete/:id', authMiddleware, FilesController.deleteFile);
+router.delete('/delete/:id', authMiddleware, validateQueryId, validateRequest, FilesController.deleteFile);
 
 /**
  * @swagger
@@ -144,7 +146,7 @@ router.delete('/delete/:id', authMiddleware, FilesController.deleteFile);
  *       404:
  *         description: Файл не найден
  */
-router.put('/update/:id', authMiddleware, upload.single('file'), FilesController.updateFile);
+router.put('/update/:id', authMiddleware, validateQueryId, validateRequest, upload.single('file'), FilesController.updateFile);
 
 /**
  * @swagger
@@ -167,6 +169,6 @@ router.put('/update/:id', authMiddleware, upload.single('file'), FilesController
  *       404:
  *         description: Файл не найден
  */
-router.get('/download/:id', authMiddleware, FilesController.downloadFile);
+router.get('/download/:id', authMiddleware, validateQueryId, validateRequest, FilesController.downloadFile);
 
 export default router;

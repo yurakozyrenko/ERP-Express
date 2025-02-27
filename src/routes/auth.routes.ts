@@ -41,6 +41,8 @@ const router = Router();
  *         description: Пользователь успешно зарегистрирован
  *       400:
  *         description: Ошибка валидации
+ *       409:
+ *         description: User with this ID already exists
  */
 
 router.post('/signup', signupValidation, validateRequest, AuthController.signup);
@@ -96,6 +98,8 @@ router.post('/signin', signupValidation, validateRequest, AuthController.signin)
  *     responses:
  *       200:
  *         description: Новый access-токен успешно выдан
+ *       401:
+ *         description: Token required
  *       403:
  *         description: Refresh-токен недействителен
  */

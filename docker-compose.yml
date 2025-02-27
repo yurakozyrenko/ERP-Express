@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - '5001:5001'
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+    networks:
+      - fileservice
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - '52000:3306' 
+    restart: always
+    volumes:
+      - mysql-data:/var/lib/mysql
+    env_file:
+      - .env
+    networks:
+      - fileservice
+
+networks:
+  fileservice:
+
+volumes:
+  mysql-data:
