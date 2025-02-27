@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import ApiError from '../error/ApiError';
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken } from '../utils/jwt';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -21,11 +21,16 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; deviceId: string };
+    const decoded = verifyAccessToken(token);
 
-    req.user = decoded;
+    if (!decoded) {
+      return next(ApiError.unauthorized('Invalid or expired token'));
+    }
+
+    req.user = decoded as { id: string; deviceId: string };
     next();
-  } catch (e) {
+  } catch (e: any) {
+    console.log(e.message);
     return next(ApiError.unauthorized('Invalid or expired token'));
   }
 };

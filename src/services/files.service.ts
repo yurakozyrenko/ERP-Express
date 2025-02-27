@@ -50,7 +50,8 @@ class FilesService {
 
     try {
       await fs.unlink(filePath);
-    } catch (err) {
+    } catch (err: any) {
+      console.log(err.message);
       throw ApiError.notFound('File not found on server');
     }
 
@@ -65,7 +66,8 @@ class FilesService {
 
     try {
       await fs.unlink(oldFilePath);
-    } catch (err) {
+    } catch (err: any) {
+      console.log(err.message);
       throw ApiError.notFound('File not found on server');
     }
 
@@ -89,7 +91,8 @@ class FilesService {
 
     try {
       await fs.access(filePath);
-    } catch (err) {
+    } catch (err: any) {
+      console.log(err.message);
       throw ApiError.notFound('File not found on server');
     }
 

@@ -13,7 +13,7 @@ const db = {
   sequelize,
   User,
   File,
-  Token
+  Token,
 };
 
 export default db;

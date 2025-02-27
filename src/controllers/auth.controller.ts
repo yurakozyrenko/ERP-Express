@@ -4,7 +4,6 @@ import ApiError from '../error/ApiError';
 import { validationResult } from 'express-validator';
 
 class AuthController {
-
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const errors = validationResult(req);
@@ -42,7 +41,7 @@ class AuthController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const { refreshToken} = req.body;
+      const { refreshToken } = req.body;
 
       if (!refreshToken) {
         return next(ApiError.badRequest('Refresh token is required'));
@@ -54,7 +53,6 @@ class AuthController {
       next(error);
     }
   }
-
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {

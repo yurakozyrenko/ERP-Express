@@ -14,9 +14,14 @@ export function generateTokens(userId: string, deviceId: string): { accessToken:
   };
 }
 
-export function verifyAccessToken(token: string): JwtPayload | null {
+export function verifyAccessToken(token: string): (JwtPayload & { id: string; deviceId: string }) | null {
   try {
-    return jwt.verify(token, jwtConfig.secret) as JwtPayload;
+    const decoded = jwt.verify(token, jwtConfig.secret) as JwtPayload;
+
+    if (typeof decoded === 'object' && 'id' in decoded && 'deviceId' in decoded) {
+      return decoded as JwtPayload & { id: string; deviceId: string };
+    }
+    return null;
   } catch {
     return null;
   }

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import filesService from '../services/files.service';
 import ApiError from '../error/ApiError';
 
@@ -47,7 +47,7 @@ class FilesController {
 
       const userId = req.user.id;
       const { id } = req.params;
-      
+
       const file = await filesService.viewFile(+id, userId);
 
       res.status(200).json(file);
