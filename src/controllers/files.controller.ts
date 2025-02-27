@@ -1,26 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import filesService from '../services/files.service';
+import ApiError from '../error/ApiError';
 
 class FilesController {
-  private getUserId(req: Request, res: Response): string | null {
-    if (!req.user) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return null;
-    }
-    return req.user.id;
-  }
-
   async uploadFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
 
       if (!req.file) {
         res.status(400).json({ message: 'No file uploaded' });
         return;
       }
 
-      const fileRecord = await filesService.uploadFile({ ...req.file, userId });
+      const fileRecord = await filesService.uploadFile({ ...req.file, userId: req.user.id });
 
       res.status(201).json({ message: 'File uploaded', file: fileRecord });
     } catch (error) {
@@ -30,13 +24,14 @@ class FilesController {
 
   async listFiles(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
 
       const listSize = parseInt(req.query.list_size as string) || 10;
       const page = parseInt(req.query.page as string) || 1;
 
-      const result = await filesService.listFiles({ listSize, page, userId });
+      const result = await filesService.listFiles({ listSize, page, userId: req.user.id });
 
       res.status(200).json(result);
     } catch (error) {
@@ -46,10 +41,13 @@ class FilesController {
 
   async viewFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
 
+      const userId = req.user.id;
       const { id } = req.params;
+      
       const file = await filesService.viewFile(+id, userId);
 
       res.status(200).json(file);
@@ -60,9 +58,10 @@ class FilesController {
 
   async deleteFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
-
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
+      const userId = req.user.id;
       const { id } = req.params;
 
       await filesService.deleteFile(+id, userId);
@@ -75,8 +74,9 @@ class FilesController {
 
   async updateFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
 
       const { id } = req.params;
 
@@ -84,7 +84,7 @@ class FilesController {
         res.status(400).json({ message: 'No file uploaded for update' });
         return;
       }
-
+      const userId = req.user.id;
       const updatedFile = await filesService.updateFile(+id, userId, req.file);
 
       res.status(200).json({ message: 'File updated', file: updatedFile });
@@ -95,9 +95,10 @@ class FilesController {
 
   async downloadFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = this.getUserId(req, res);
-      if (!userId) return;
-
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
+      const userId = req.user.id;
       const { id } = req.params;
       await filesService.downloadFile(+id, userId, res);
     } catch (error) {

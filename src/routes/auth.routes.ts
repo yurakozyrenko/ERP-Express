@@ -2,6 +2,8 @@ import { Router } from 'express';
 import AuthController from '../controllers/auth.controller';
 import { body } from 'express-validator'; // Для валидации входных данных
 import authMiddleware from '../middleware/auth';
+import { signupValidation } from '../validations/authValidation';
+import { validateRequest } from '../middleware/validateRequest';
 
 const router = Router();
 
@@ -42,22 +44,7 @@ const router = Router();
  *         description: Ошибка валидации
  */
 
-router.post(
-  '/signup',
-  body('id').custom((value) => {
-    // Проверяем, является ли значение email
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    // Проверяем, является ли значение номером телефона (начинается с цифры, 10-15 символов)
-    const isPhone = /^\d{10,15}$/.test(value);
-
-    if (!isEmail && !isPhone) {
-      throw new Error('id должен быть email или номером телефона');
-    }
-    return true;
-  }),
-  body('password').isLength({ min: 6 }).withMessage('Пароль должен содержать минимум 6 символов'),
-  AuthController.signup,
-);
+router.post('/signup', signupValidation, validateRequest, AuthController.signup);
 
 /**
  * @swagger
@@ -87,7 +74,7 @@ router.post(
  *       401:
  *         description: Неверные учетные данные
  */
-router.post('/signin', AuthController.signin);
+router.post('/signin', signupValidation, validateRequest, AuthController.signin);
 
 /**
  * @swagger
@@ -133,11 +120,11 @@ router.post('/signin/new_token', authMiddleware, AuthController.refreshToken);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Successfully logged out" 
+ *                   example: "Successfully logged out"
  *       401:
  *         description: Пользователь не авторизован
  */
-router.post('/logout',authMiddleware, AuthController.logout);
+router.get('/logout', authMiddleware, AuthController.logout);
 
 /**
  * @swagger
@@ -162,6 +149,5 @@ router.post('/logout',authMiddleware, AuthController.logout);
  *         description: Неавторизован
  */
 router.get('/info', authMiddleware, AuthController.getUserInfo);
-
 
 export default router;

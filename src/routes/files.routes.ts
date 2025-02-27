@@ -53,7 +53,7 @@ router.post('/upload', authMiddleware, upload.single('file'), FilesController.up
  *           type: integer
  *         description: Номер страницы
  *       - in: query
- *         name: limit
+ *         name: list_size
  *         schema:
  *           type: integer
  *         description: Количество файлов на странице

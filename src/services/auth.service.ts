@@ -1,14 +1,10 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
 import User from '../models/user';
 import { IUser } from '../utils/interfaces';
 import ApiError from '../error/ApiError';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your_refresh_secret';
-
-const tokenStorage = new Map(); // Для хранения refresh-токенов
+import { generateTokens, verifyRefreshToken } from '../utils/jwt';
+import Token from '../models/token';
 
 class AuthService {
   async signup({ id, password }: IUser) {
@@ -18,9 +14,13 @@ class AuthService {
       throw ApiError.conflict('User with this email already exists');
     }
 
-    const user = await User.create({ id, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    return { message: 'User registered', userId: user.id };
+    const user = await User.create({ id, password: hashedPassword });
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+
+    return { message: 'User registered', accessToken, refreshToken };
   }
 
   async signin({ id, password }: IUser) {
@@ -35,19 +35,48 @@ class AuthService {
       throw ApiError.unauthorized(`Invalid credentials`);
     }
 
-    const accessToken = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: '10m',
-    });
+    const { accessToken, refreshToken } = generateTokens(user.id);
 
-    const refreshToken = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
-      expiresIn: '7d',
+    // Сохраняем токен в БД
+    await Token.upsert({
+      userId: user.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
     });
-
-    tokenStorage.set(user.id, refreshToken); // Сохраняем refresh-токен
 
     return { accessToken, refreshToken };
   }
 
+  async refreshToken(refreshToken: string) {
+    if (!refreshToken) {
+      throw ApiError.forbidden('No token provided');
+    }
+
+    const decoded = verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      throw ApiError.forbidden('Invalid token');
+    }
+
+    const tokenData = await Token.findOne({ where: { userId: decoded.id, refreshToken } });
+    if (!tokenData) {
+      throw ApiError.forbidden('Token revoked');
+    }
+
+    const tokens = generateTokens(decoded.id);
+
+    // Обновляем refresh-токен в БД
+    await tokenData.update({
+      refreshToken: tokens.refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
+    });
+
+    return tokens;
+  }
+
+  async logout(userId: string) {
+    // Удаляем refresh-токен из БД
+    await Token.destroy({ where: { userId } });
+  }
 }
 
 export default new AuthService();
