@@ -25,5 +25,3 @@ db.sequelize.sync().then(() => {
     console.log(`🚀 Server is running on port ${HTTP_PORT}`);
   });
 });
-
-// export default app;

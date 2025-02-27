@@ -5,20 +5,30 @@ import { IUser } from '../utils/interfaces';
 import ApiError from '../error/ApiError';
 import { generateTokens, verifyRefreshToken } from '../utils/jwt';
 import Token from '../models/token';
+import { v4 as uuidv4 } from 'uuid';
 
 class AuthService {
   async signup({ id, password }: IUser) {
     const existingUser = await User.findOne({ where: { id } });
 
     if (existingUser) {
-      throw ApiError.conflict('User with this email already exists');
+      throw ApiError.conflict('User with this ID already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({ id, password: hashedPassword });
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const deviceId = uuidv4();
+
+    const { accessToken, refreshToken } = generateTokens(user.id, deviceId);
+
+    await Token.create({
+      userId: user.id,
+      refreshToken,
+      deviceId,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
 
     return { message: 'User registered', accessToken, refreshToken };
   }
@@ -35,21 +45,23 @@ class AuthService {
       throw ApiError.unauthorized(`Invalid credentials`);
     }
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const deviceId = uuidv4();
 
-    // Сохраняем токен в БД
-    await Token.upsert({
+    const tokens = generateTokens(user.id, deviceId);
+
+    await Token.create({
       userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
+      refreshToken: tokens.refreshToken,
+      deviceId,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
-    return { accessToken, refreshToken };
+    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
   }
 
   async refreshToken(refreshToken: string) {
     if (!refreshToken) {
-      throw ApiError.forbidden('No token provided');
+      throw ApiError.forbidden('No token or device ID provided');
     }
 
     const decoded = verifyRefreshToken(refreshToken);
@@ -62,19 +74,38 @@ class AuthService {
       throw ApiError.forbidden('Token revoked');
     }
 
-    const tokens = generateTokens(decoded.id);
+    if (new Date(tokenData.expiresAt) < new Date()) {
+      await tokenData.destroy();
+      throw ApiError.forbidden('Invalid token');
+    }
 
-    // Обновляем refresh-токен в БД
+    const newTokens = generateTokens(decoded.id, tokenData.deviceId);
+
     await tokenData.update({
-      refreshToken: tokens.refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
+      refreshToken: newTokens.refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
-    return tokens;
+    return newTokens;
   }
 
-  async logout(userId: string) {
-    // Удаляем refresh-токен из БД
+  async logout(userId: string, deviceId: string) {
+    if (!userId || !deviceId) {
+      throw ApiError.unauthorized('User ID and device ID are required');
+    }
+
+    const tokenData = await Token.findOne({ where: { userId, deviceId } });
+
+    if (tokenData) {
+      await tokenData.destroy();
+    }
+  }
+
+  async logoutAll(userId: string) {
+    if (!userId) {
+      throw ApiError.unauthorized('User ID is required');
+    }
+
     await Token.destroy({ where: { userId } });
   }
 }

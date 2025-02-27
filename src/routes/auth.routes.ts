@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import AuthController from '../controllers/auth.controller';
-import { body } from 'express-validator'; // Для валидации входных данных
 import authMiddleware from '../middleware/auth';
 import { signupValidation } from '../validations/authValidation';
 import { validateRequest } from '../middleware/validateRequest';
@@ -106,21 +105,13 @@ router.post('/signin/new_token', authMiddleware, AuthController.refreshToken);
  * @swagger
  * /api/auth/logout:
  *   get:
- *     summary: Выход из системы
+ *     summary: Выход из системы на конкретном устройстве
  *     tags: [Auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Успешный выход
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Successfully logged out"
+ *         description: Успешный выход с устройства
  *       401:
  *         description: Пользователь не авторизован
  */
@@ -149,5 +140,21 @@ router.get('/logout', authMiddleware, AuthController.logout);
  *         description: Неавторизован
  */
 router.get('/info', authMiddleware, AuthController.getUserInfo);
+
+/**
+ * @swagger
+ * /api/auth/logout/all:
+ *   get:
+ *     summary: Выход со всех устройств
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Пользователь вышел со всех устройств
+ *       401:
+ *         description: Пользователь не авторизован
+ */
+router.get('/logout/all', authMiddleware, AuthController.logoutAll);
 
 export default router;

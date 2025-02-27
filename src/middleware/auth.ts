@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
 }
 
 interface AuthRequest extends Request {
-  user?: { id: string }; // 👈 Добавляем user в Request
+  user?: { id: string; deviceId: string };
 }
 
 const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -21,10 +21,8 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
   const token = authHeader.split(' ')[1];
 
   try {
-    // Проверяем токен на корректность
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; deviceId: string };
 
-    // Передаём данные пользователя в `req.user`
     req.user = decoded;
     next();
   } catch (e) {

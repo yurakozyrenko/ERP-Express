@@ -4,7 +4,7 @@ import ApiError from '../error/ApiError';
 import { validationResult } from 'express-validator';
 
 class AuthController {
-  // Регистрация пользователя
+
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const errors = validationResult(req);
@@ -22,7 +22,6 @@ class AuthController {
     }
   }
 
-  // Вход пользователя
   async signin(req: Request, res: Response, next: NextFunction) {
     try {
       const errors = validationResult(req);
@@ -41,10 +40,14 @@ class AuthController {
     }
   }
 
-  // Обновление JWT-токена
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const { refreshToken } = req.body;
+      const { refreshToken} = req.body;
+
+      if (!refreshToken) {
+        return next(ApiError.badRequest('Refresh token is required'));
+      }
+
       const tokens = await AuthService.refreshToken(refreshToken);
       res.json(tokens);
     } catch (error) {
@@ -52,16 +55,35 @@ class AuthController {
     }
   }
 
-  // Логаут пользователя
+
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) {
         return next(ApiError.unauthorized('User not found'));
       }
 
-      await AuthService.logout(req.user.id);
+      const userId = req.user.id;
+      const deviceId = req.user.deviceId;
+
+      await AuthService.logout(userId, deviceId);
 
       res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logoutAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return next(ApiError.unauthorized('User not found'));
+      }
+
+      const userId = req.user.id;
+
+      await AuthService.logoutAll(userId);
+
+      res.status(200).json({ message: 'Logged out from all devices' });
     } catch (error) {
       next(error);
     }
@@ -72,8 +94,8 @@ class AuthController {
       if (!req.user) {
         return next(ApiError.unauthorized('User not found'));
       }
-
-      res.json({ id: req.user.id });
+      const userId = req.user.id;
+      res.json({ userId });
     } catch (err) {
       next(err);
     }

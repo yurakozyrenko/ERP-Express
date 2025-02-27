@@ -5,6 +5,7 @@ class Token extends Model {
   declare id: number;
   declare userId: string;
   declare refreshToken: string;
+  declare deviceId: string;
   declare expiresAt: Date;
 }
 
@@ -20,6 +21,7 @@ Token.init(
       },
     },
     refreshToken: { type: DataTypes.STRING, allowNull: false },
+    deviceId: { type: DataTypes.STRING, allowNull: false },
     expiresAt: { type: DataTypes.DATE, allowNull: false },
   },
   { sequelize, tableName: 'token', timestamps: false },
