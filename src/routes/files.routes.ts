@@ -16,7 +16,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/file/upload:
+ * /file/upload:
  *   post:
  *     summary: Загрузка файла
  *     tags: [Files]
@@ -42,7 +42,7 @@ router.post('/upload', authMiddleware, upload.single('file'), FilesController.up
 
 /**
  * @swagger
- * /api/file/list:
+ * /file/list:
  *   get:
  *     summary: Получение списка файлов с пагинацией
  *     tags: [Files]
@@ -67,7 +67,7 @@ router.get('/list', authMiddleware, FilesController.listFiles);
 
 /**
  * @swagger
- * /api/file/{id}:
+ * /file/{id}:
  *   get:
  *     summary: Получение информации о файле
  *     tags: [Files]
@@ -90,7 +90,7 @@ router.get('/:id', authMiddleware, validateQueryId, validateRequest, FilesContro
 
 /**
  * @swagger
- * /api/file/delete/{id}:
+ * /file/delete/{id}:
  *   delete:
  *     summary: Удаление файла
  *     tags: [Files]
@@ -113,7 +113,7 @@ router.delete('/delete/:id', authMiddleware, validateQueryId, validateRequest, F
 
 /**
  * @swagger
- * /api/file/update/{id}:
+ * /file/update/{id}:
  *   put:
  *     summary: Обновление файла
  *     tags: [Files]
@@ -150,7 +150,7 @@ router.put('/update/:id', authMiddleware, validateQueryId, validateRequest, uplo
 
 /**
  * @swagger
- * /api/file/download/{id}:
+ * /file/download/{id}:
  *   get:
  *     summary: Скачивание файла
  *     tags: [Files]

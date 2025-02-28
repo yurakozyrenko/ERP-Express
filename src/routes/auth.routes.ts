@@ -15,7 +15,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/auth/signup:
+ * /signup:
  *   post:
  *     summary: Регистрация нового пользователя
  *     tags: [Auth]
@@ -49,7 +49,7 @@ router.post('/signup', signupValidation, validateRequest, AuthController.signup)
 
 /**
  * @swagger
- * /api/auth/signin:
+ * /signin:
  *   post:
  *     summary: Вход пользователя
  *     tags: [Auth]
@@ -79,7 +79,7 @@ router.post('/signin', signupValidation, validateRequest, AuthController.signin)
 
 /**
  * @swagger
- * /api/auth/signin/new_token:
+ * /signin/new_token:
  *   post:
  *     summary: Обновление JWT токена по refresh-токену
  *     tags: [Auth]
@@ -107,7 +107,7 @@ router.post('/signin/new_token', authMiddleware, AuthController.refreshToken);
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /logout:
  *   get:
  *     summary: Выход из системы на конкретном устройстве
  *     tags: [Auth]
@@ -123,7 +123,7 @@ router.get('/logout', authMiddleware, AuthController.logout);
 
 /**
  * @swagger
- * /api/auth/info:
+ * /info:
  *   get:
  *     summary: Получить информацию о текущем пользователе
  *     tags: [Auth]
@@ -147,7 +147,7 @@ router.get('/info', authMiddleware, AuthController.getUserInfo);
 
 /**
  * @swagger
- * /api/auth/logout/all:
+ * /logout/all:
  *   get:
  *     summary: Выход со всех устройств
  *     tags: [Auth]

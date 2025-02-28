@@ -14,7 +14,7 @@ const HTTP_PORT: number = Number(process.env.HTTP_PORT) || 3000;
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-app.use('/api', router);
+app.use('/', router);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
